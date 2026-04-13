@@ -15,6 +15,13 @@ import { Label } from '@/components/ui/label';
 
 const SUPPORTED_PLATFORMS: Platform[] = ['opencode', 'claude', 'trace-cn', 'cursor'];
 
+const PLATFORM_LABELS: Record<Platform, string> = {
+  opencode: 'OpenCode',
+  claude: 'Claude Code',
+  'trace-cn': 'Trace CN',
+  cursor: 'Cursor',
+};
+
 interface SyncedPlatformsState {
   [skillName: string]: Platform[];
 }
@@ -377,14 +384,7 @@ export default function SkillsPage() {
               将 {selectedSkills.size} 个技能同步到以下 Agent：
             </p>
             <div className="space-y-3">
-              {SUPPORTED_PLATFORMS.map((platform) => {
-                const labels: Record<Platform, string> = {
-                  opencode: 'OpenCode',
-                  claude: 'Claude Code',
-                  'trace-cn': 'Trace CN',
-                  cursor: 'Cursor',
-                };
-                return (
+              {SUPPORTED_PLATFORMS.map((platform) => (
                   <div key={platform} className="flex items-center gap-3">
                     <Checkbox
                       id={`agent-${platform}`}
@@ -399,11 +399,10 @@ export default function SkillsPage() {
                       }}
                     />
                     <label htmlFor={`agent-${platform}`} className="text-sm font-medium cursor-pointer">
-                      {labels[platform]}
+                      {PLATFORM_LABELS[platform]}
                     </label>
                   </div>
-                );
-              })}
+                ))}
             </div>
             <div className="flex gap-2 justify-end pt-2">
               <Button variant="outline" onClick={() => setShowSyncModal(false)}>
