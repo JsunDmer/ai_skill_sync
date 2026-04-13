@@ -104,6 +104,8 @@ export default function SkillsPage() {
   const [githubBranch, setGithubBranch] = useState('main');
   const [pushStatus, setPushStatus] = useState<string>('');
   const [syncedPlatforms, setSyncedPlatforms] = useState<SyncedPlatformsState>({});
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [selectedAgents, setSelectedAgents] = useState<Set<Platform>>(new Set(SUPPORTED_PLATFORMS));
 
   useEffect(() => {
     fetchSkills();
@@ -174,22 +176,23 @@ export default function SkillsPage() {
     }
   };
 
-  const handleSync = async () => {
+  const openSyncModal = () => {
     if (selectedSkills.size === 0) return;
+    setSelectedAgents(new Set(SUPPORTED_PLATFORMS));
+    setShowSyncModal(true);
+  };
 
+  const handleSync = async () => {
+    if (selectedSkills.size === 0 || selectedAgents.size === 0) return;
+    setShowSyncModal(false);
     setIsSyncing(true);
     try {
       const selectedSkillsList = Array.from(selectedSkills);
-      const result = await syncToPlatforms(selectedSkillsList, SUPPORTED_PLATFORMS);
+      const agentsList = Array.from(selectedAgents);
+      const result = await syncToPlatforms(selectedSkillsList, agentsList);
 
       const successCount = result.results.filter(r => r.status === 'success').length;
-      const copyCount = result.results.filter(r => r.status === 'success' && (r as { method?: string }).method === 'copy').length;
-      
-      if (copyCount > 0) {
-        alert(`Synced ${successCount} skills to agents\n\n其中 ${copyCount} 个使用复制模式（非符号链接）。`);
-      } else {
-        alert(`Synced ${successCount} skills to agents`);
-      }
+      alert(`Synced ${successCount} results to ${agentsList.join(', ')}`);
 
       for (const skillName of selectedSkillsList) {
         const skillResults = result.results.filter(r => r.skill === skillName);
@@ -198,7 +201,7 @@ export default function SkillsPage() {
           .map(r => r.platform as Platform);
         setSyncedPlatforms(prev => ({
           ...prev,
-          [skillName]: [...(prev[skillName] || []), ...newlySynced],
+          [skillName]: [...new Set([...(prev[skillName] || []), ...newlySynced])],
         }));
       }
     } catch (e) {
@@ -254,7 +257,7 @@ export default function SkillsPage() {
               Push to GitHub
             </Button>
             {selectedSkills.size > 0 && (
-              <Button onClick={handleSync} disabled={isSyncing}>
+              <Button onClick={openSyncModal} disabled={isSyncing}>
                 {isSyncing ? 'Syncing...' : `Sync ${selectedSkills.size} to Agents`}
               </Button>
             )}
@@ -360,6 +363,57 @@ export default function SkillsPage() {
               </Button>
               <Button onClick={handlePushToGithub} disabled={isSyncing}>
                 {isSyncing ? 'Pushing...' : 'Push'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSyncModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background p-6 rounded-lg w-[360px] space-y-4">
+            <h2 className="text-xl font-bold">选择同步目标</h2>
+            <p className="text-sm text-muted-foreground">
+              将 {selectedSkills.size} 个技能同步到以下 Agent：
+            </p>
+            <div className="space-y-3">
+              {SUPPORTED_PLATFORMS.map((platform) => {
+                const labels: Record<Platform, string> = {
+                  opencode: 'OpenCode',
+                  claude: 'Claude Code',
+                  'trace-cn': 'Trace CN',
+                  cursor: 'Cursor',
+                };
+                return (
+                  <div key={platform} className="flex items-center gap-3">
+                    <Checkbox
+                      id={`agent-${platform}`}
+                      checked={selectedAgents.has(platform)}
+                      onCheckedChange={(checked) => {
+                        setSelectedAgents(prev => {
+                          const next = new Set(prev);
+                          if (checked) next.add(platform);
+                          else next.delete(platform);
+                          return next;
+                        });
+                      }}
+                    />
+                    <label htmlFor={`agent-${platform}`} className="text-sm font-medium cursor-pointer">
+                      {labels[platform]}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => setShowSyncModal(false)}>
+                取消
+              </Button>
+              <Button
+                onClick={handleSync}
+                disabled={selectedAgents.size === 0}
+              >
+                确认同步
               </Button>
             </div>
           </div>
