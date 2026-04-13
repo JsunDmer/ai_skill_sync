@@ -33,8 +33,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       applyLight();
     } else {
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      mq.matches ? applyDark() : applyLight();
-      const handler = (e: MediaQueryListEvent) => e.matches ? applyDark() : applyLight();
+      if (mq.matches) applyDark(); else applyLight();
+      const handler = (e: MediaQueryListEvent) => { if (e.matches) applyDark(); else applyLight(); };
       mq.addEventListener('change', handler);
       return () => mq.removeEventListener('change', handler);
     }

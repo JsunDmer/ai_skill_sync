@@ -101,7 +101,7 @@ const SkillCard = memo(function SkillCard({
 });
 
 export default function SkillsPage() {
-  const { skills, isLoading, error, fetchSkills, deleteSkill, syncToPlatforms, pushToGithub, config } = useSkillStore();
+  const { skills, isLoading, error, fetchSkills, deleteSkill, syncToPlatforms, pushToGithub } = useSkillStore();
   const [activeTab, setActiveTab] = useState('all');
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
