@@ -198,8 +198,19 @@ export default function SkillsPage() {
       const agentsList = Array.from(selectedAgents);
       const result = await syncToPlatforms(selectedSkillsList, agentsList);
 
-      const successCount = result.results.filter(r => r.status === 'success').length;
-      alert(`Synced ${successCount} results to ${agentsList.join(', ')}`);
+      // 排除后端附加的 platform:'local' 伪结果，只统计实际平台同步结果
+      const platformResults = result.results.filter(r => r.platform !== 'local');
+      const successCount = platformResults.filter(r => r.status === 'success').length;
+      const failedResults = platformResults.filter(r => r.status === 'error');
+
+      if (failedResults.length > 0) {
+        const failedMsg = failedResults
+          .map(r => `• ${r.skill} → ${r.platform}: ${r.error || 'Unknown error'}`)
+          .join('\n');
+        alert(`Synced ${successCount} skill(s) successfully.\n\nFailed (${failedResults.length}):\n${failedMsg}`);
+      } else {
+        alert(`Synced ${successCount} skill(s) to ${agentsList.join(', ')}`);
+      }
 
       for (const skillName of selectedSkillsList) {
         const skillResults = result.results.filter(r => r.skill === skillName);
