@@ -109,7 +109,7 @@ export async function GET() {
           description: parsed.description || '',
           platforms: [],
           content: {
-            filePath: entry.name + '/',
+            filePath: entry.name,
             content: content,
           },
           tags: [tag],
