@@ -19,18 +19,12 @@ interface SyncedPlatformsState {
   [skillName: string]: Platform[];
 }
 
-interface LoadingPlatformsState {
-  [skillName: string]: Platform[];
-}
-
 interface SkillCardProps {
   skill: Skill;
   isSelected: boolean;
   onToggle: (name: string) => void;
   onDelete: (name: string) => void;
   syncedPlatforms: Platform[];
-  loadingPlatforms: Platform[];
-  onSync: (skillName: string, platform: Platform) => void;
 }
 
 const SkillCard = memo(function SkillCard({
@@ -39,8 +33,6 @@ const SkillCard = memo(function SkillCard({
   onToggle,
   onDelete,
   syncedPlatforms,
-  loadingPlatforms,
-  onSync,
 }: SkillCardProps) {
   return (
     <div className="relative">
@@ -48,8 +40,6 @@ const SkillCard = memo(function SkillCard({
         <AgentIconGroup
           platforms={SUPPORTED_PLATFORMS}
           syncedPlatforms={syncedPlatforms}
-          loadingPlatforms={loadingPlatforms}
-          onSync={(platform) => onSync(skill.name, platform)}
         />
         <Checkbox
           checked={isSelected}
@@ -114,7 +104,6 @@ export default function SkillsPage() {
   const [githubBranch, setGithubBranch] = useState('main');
   const [pushStatus, setPushStatus] = useState<string>('');
   const [syncedPlatforms, setSyncedPlatforms] = useState<SyncedPlatformsState>({});
-  const [loadingPlatforms, setLoadingPlatforms] = useState<LoadingPlatformsState>({});
 
   useEffect(() => {
     fetchSkills();
@@ -182,45 +171,6 @@ export default function SkillsPage() {
       setSelectedSkills(new Set());
     } else {
       setSelectedSkills(new Set(filteredSkills.map(s => s.name)));
-    }
-  };
-
-  const handleSingleSync = async (skillName: string, platform: Platform) => {
-    setLoadingPlatforms(prev => ({
-      ...prev,
-      [skillName]: [...(prev[skillName] || []), platform],
-    }));
-
-    try {
-      const result = await syncToPlatforms([skillName], [platform]);
-
-      const skillResult = result.results.find(r => r.skill === skillName && r.platform === platform);
-
-      if (skillResult?.status === 'success') {
-        setSyncedPlatforms(prev => ({
-          ...prev,
-          [skillName]: [...(prev[skillName] || []), platform],
-        }));
-        const method = (skillResult as { method?: string }).method;
-        if (method === 'copy') {
-          alert(`"${skillName}" 已同步到 ${platform} (复制模式)\n\n注意：使用文件复制而非符号链接。如需更新，请重新同步。`);
-        }
-      } else if (skillResult?.status === 'skipped') {
-        setSyncedPlatforms(prev => ({
-          ...prev,
-          [skillName]: [...(prev[skillName] || []), platform],
-        }));
-        alert(`"${skillName}" already synced to ${platform}`);
-      } else {
-        alert(`Failed to sync "${skillName}" to ${platform}: ${skillResult?.error || 'Unknown error'}`);
-      }
-    } catch (e) {
-      alert('Sync failed: ' + (e instanceof Error ? e.message : 'Unknown error'));
-    } finally {
-      setLoadingPlatforms(prev => ({
-        ...prev,
-        [skillName]: (prev[skillName] || []).filter(p => p !== platform),
-      }));
     }
   };
 
@@ -367,8 +317,6 @@ export default function SkillsPage() {
               onToggle={toggleSkillSelection}
               onDelete={deleteSkill}
               syncedPlatforms={syncedPlatforms[skill.name] || []}
-              loadingPlatforms={loadingPlatforms[skill.name] || []}
-              onSync={handleSingleSync}
             />
           ))}
         </div>

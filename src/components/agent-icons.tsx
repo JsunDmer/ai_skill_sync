@@ -7,7 +7,6 @@ interface AgentIconProps {
   platform: Platform;
   isSynced: boolean;
   isLoading?: boolean;
-  onClick?: () => void;
   className?: string;
 }
 
@@ -53,23 +52,20 @@ const PLATFORM_CONFIG: Record<Platform, { name: string; icon: React.ReactNode; c
   },
 };
 
-export function AgentIcon({ platform, isSynced, isLoading, onClick, className }: AgentIconProps) {
+export function AgentIcon({ platform, isSynced, isLoading, className }: AgentIconProps) {
   const config = PLATFORM_CONFIG[platform];
 
   return (
-    <button
-      onClick={onClick}
-      disabled={isLoading}
+    <div
       className={cn(
-        'flex items-center justify-center w-7 h-7 rounded-md transition-all duration-200',
-        'hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1',
+        'flex items-center justify-center w-7 h-7 rounded-md',
         isSynced
-          ? `${config.color} bg-current/10 hover:bg-current/20 focus:ring-current`
-          : 'text-muted-foreground bg-muted hover:bg-muted/80 hover:text-foreground focus:ring-ring',
-        isLoading && 'opacity-50 cursor-not-allowed',
+          ? `${config.color} bg-current/10`
+          : 'text-muted-foreground bg-muted',
+        isLoading && 'opacity-50',
         className
       )}
-      title={`${config.name}${isSynced ? ' (已同步)' : ' (点击同步)'}`}
+      title={`${config.name}${isSynced ? ' (已同步)' : ' (未同步)'}`}
     >
       {isLoading ? (
         <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -79,7 +75,7 @@ export function AgentIcon({ platform, isSynced, isLoading, onClick, className }:
       ) : (
         config.icon
       )}
-    </button>
+    </div>
   );
 }
 
@@ -87,7 +83,6 @@ interface AgentIconGroupProps {
   platforms: Platform[];
   syncedPlatforms: Platform[];
   loadingPlatforms?: Platform[];
-  onSync?: (platform: Platform) => void;
   className?: string;
 }
 
@@ -95,7 +90,6 @@ export function AgentIconGroup({
   platforms,
   syncedPlatforms,
   loadingPlatforms = [],
-  onSync,
   className,
 }: AgentIconGroupProps) {
   return (
@@ -106,7 +100,6 @@ export function AgentIconGroup({
           platform={platform}
           isSynced={syncedPlatforms.includes(platform)}
           isLoading={loadingPlatforms.includes(platform)}
-          onClick={() => onSync?.(platform)}
         />
       ))}
     </div>
