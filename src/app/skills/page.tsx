@@ -63,7 +63,7 @@ const SkillCard = memo(function SkillCard({
             e.preventDefault();
             e.stopPropagation();
             if (confirm(`Delete "${skill.name}"?`)) {
-              onDelete(skill.name);
+              onDelete(skill.content.filePath.replace(/\/$/, ''));
             }
           }}
         >
