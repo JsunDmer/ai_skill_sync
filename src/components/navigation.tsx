@@ -3,9 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/components/theme-provider';
-
-type Theme = 'light' | 'dark' | 'system';
+import { useTheme, Theme } from '@/components/theme-provider';
 
 const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: 'light', label: 'Light' },
