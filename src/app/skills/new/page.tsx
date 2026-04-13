@@ -61,8 +61,10 @@ export default function ImportSkillPage() {
     setIsDragging(true);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
   };
 
   const handleDrop = async (e: React.DragEvent) => {
@@ -134,7 +136,7 @@ export default function ImportSkillPage() {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                onClick={() => zipFileInputRef.current?.click()}
+                onClick={() => !isLoading && zipFileInputRef.current?.click()}
                 className={cn(
                   'flex flex-col items-center justify-center gap-3 p-10 border-2 border-dashed rounded-lg cursor-pointer transition-colors',
                   isDragging
