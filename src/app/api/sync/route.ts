@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Missing skills or platforms' }, { status: 400 });
       }
       
-      const results: { skill: string; platform: string; status: string; error?: string }[] = [];
+      const results: { skill: string; platform: string; status: string; error?: string; method?: string }[] = [];
       
       for (const skillName of skills) {
         const sourcePath = join(SKILLS_DIR, skillName);
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Missing skills or platforms' }, { status: 400 });
       }
 
-      const results: { skill: string; platform: string; status: string; error?: string }[] = [];
+      const results: { skill: string; platform: string; status: string; error?: string; method?: string }[] = [];
 
       for (const skillName of skills) {
         for (const platform of platforms as Platform[]) {
