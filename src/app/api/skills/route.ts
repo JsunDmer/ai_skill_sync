@@ -20,26 +20,47 @@ const PLATFORM_PATHS: Record<Platform, string> = {
 function parseFrontmatter(content: string): { name?: string; description?: string; content: string; metadata?: Record<string, unknown> } | null {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
   if (!match) return null;
-  
+
   const frontmatter = match[1];
   const body = content.slice(match[0].length).trim();
-  
+
   const result: { name?: string; description?: string; content: string; metadata: Record<string, unknown> } = {
     content: body,
     metadata: {},
   };
-  
-  frontmatter.split('\n').forEach(line => {
+
+  const lines = frontmatter.split('\n');
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
     const colonIdx = line.indexOf(':');
-    if (colonIdx === -1) return;
+    if (colonIdx === -1) { i++; continue; }
+
     const key = line.slice(0, colonIdx).trim();
-    const value = line.slice(colonIdx + 1).trim();
-    
-    if (key === 'name') result.name = value;
-    else if (key === 'description') result.description = value;
-    else result.metadata[key] = value;
-  });
-  
+    const rawValue = line.slice(colonIdx + 1).trim();
+
+    // 处理 YAML 块标量: description: | 或 description: |-
+    if (rawValue === '|' || rawValue === '|-') {
+      i++;
+      const blockLines: string[] = [];
+      // 收集后续缩进行
+      while (i < lines.length && (lines[i].startsWith(' ') || lines[i].startsWith('\t'))) {
+        blockLines.push(lines[i].trim());
+        i++;
+      }
+      const blockValue = blockLines.join(' ').trim();
+      if (key === 'name') result.name = blockValue;
+      else if (key === 'description') result.description = blockValue;
+      else result.metadata[key] = blockValue;
+      continue;
+    }
+
+    if (key === 'name') result.name = rawValue;
+    else if (key === 'description') result.description = rawValue;
+    else result.metadata[key] = rawValue;
+    i++;
+  }
+
   return result.name ? result : null;
 }
 
