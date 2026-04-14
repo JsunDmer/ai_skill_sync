@@ -21,6 +21,7 @@ interface SkillStore {
   setError: (error: string | null) => void;
   
   syncToPlatforms: (skillNames: string[], platforms: Platform[]) => Promise<{ results: { skill: string; platform: string; status: string; error?: string }[] }>;
+  unsyncFromPlatforms: (skillNames: string[], platforms: Platform[]) => Promise<{ results: { skill: string; platform: string; status: string; error?: string }[] }>;
   pushToGithub: (githubConfig: { repoUrl: string; token: string; branch?: string }) => Promise<{ success: boolean; message?: string; error?: string }>;
 }
 
@@ -115,7 +116,31 @@ export const useSkillStore = create<SkillStore>((set, get) => ({
       throw e;
     }
   },
-  
+
+  unsyncFromPlatforms: async (skillNames, platforms) => {
+    try {
+      const response = await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'unsync',
+          skills: skillNames,
+          platforms,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to unsync skills');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Unsync error:', error);
+      throw error;
+    }
+  },
+
   pushToGithub: async (githubConfig) => {
     set({ isLoading: true });
     try {
