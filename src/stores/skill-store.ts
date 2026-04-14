@@ -118,6 +118,7 @@ export const useSkillStore = create<SkillStore>((set, get) => ({
   },
 
   unsyncFromPlatforms: async (skillNames, platforms) => {
+    set({ isLoading: true });
     try {
       const response = await fetch('/api/sync', {
         method: 'POST',
@@ -135,9 +136,11 @@ export const useSkillStore = create<SkillStore>((set, get) => ({
       }
 
       return await response.json();
-    } catch (error) {
-      console.error('Unsync error:', error);
-      throw error;
+    } catch (e) {
+      set({ error: e instanceof Error ? e.message : 'Unsync failed' });
+      throw e;
+    } finally {
+      set({ isLoading: false });
     }
   },
 
