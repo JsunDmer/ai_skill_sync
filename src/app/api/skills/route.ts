@@ -198,7 +198,7 @@ export async function GET() {
           platforms: [],
           content: {
             filePath: entry.name,
-            content: content,
+            content: parsed.content,
           },
           tags: [tag],
           createdAt: stat.birthtime.toISOString(),
