@@ -20,8 +20,8 @@ interface SkillStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   
-  syncToPlatforms: (skillNames: string[], platforms: Platform[]) => Promise<{ results: { skill: string; platform: string; status: string; error?: string }[] }>;
-  unsyncFromPlatforms: (skillNames: string[], platforms: Platform[]) => Promise<{ results: { skill: string; platform: string; status: string; error?: string }[] }>;
+  syncToPlatforms: (skillNames: string[], platforms: Platform[]) => Promise<{ results: { skill: string; platform: string; status: 'success' | 'error' | 'skipped'; error?: string }[] }>;
+  unsyncFromPlatforms: (skillNames: string[], platforms: Platform[]) => Promise<{ results: { skill: string; platform: string; status: 'success' | 'error' | 'skipped'; error?: string }[] }>;
   pushToGithub: (githubConfig: { repoUrl: string; token: string; branch?: string }) => Promise<{ success: boolean; message?: string; error?: string }>;
 }
 

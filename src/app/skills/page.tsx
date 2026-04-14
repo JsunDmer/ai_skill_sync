@@ -13,6 +13,13 @@ import { Skill, Platform } from '@/types/skill';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+interface SyncResult {
+  skill: string;
+  platform: string;
+  status: 'success' | 'error' | 'skipped';
+  error?: string;
+}
+
 const SUPPORTED_PLATFORMS: Platform[] = ['opencode', 'claude', 'trace-cn', 'cursor'];
 
 const PLATFORM_LABELS: Record<Platform, string> = {
@@ -210,9 +217,9 @@ export default function SkillsPage() {
 
       try {
         const result = await unsyncFromPlatforms([skillName], [platform]);
-        const platformResults = result.results.filter((r: any) => r.platform !== 'local');
-        const successCount = platformResults.filter((r: any) => r.status === 'success').length;
-        const failedResults = platformResults.filter((r: any) => r.status === 'error');
+        const platformResults = result.results.filter((r: SyncResult) => r.platform !== 'local');
+        const successCount = platformResults.filter((r: SyncResult) => r.status === 'success').length;
+        const failedResults = platformResults.filter((r: SyncResult) => r.status === 'error');
 
         if (failedResults.length > 0) {
           alert(`Failed to unsync: ${failedResults[0].error || 'Unknown error'}`);
@@ -240,8 +247,8 @@ export default function SkillsPage() {
 
       try {
         const result = await syncToPlatforms([skillName], [platform]);
-        const platformResults = result.results.filter((r: any) => r.platform !== 'local');
-        const successCount = platformResults.filter((r: any) => r.status === 'success').length;
+        const platformResults = result.results.filter((r: SyncResult) => r.platform !== 'local');
+        const successCount = platformResults.filter((r: SyncResult) => r.status === 'success').length;
 
         if (successCount > 0) {
           setSyncedPlatforms(prev => ({
@@ -332,13 +339,13 @@ export default function SkillsPage() {
       const agentsList = Array.from(selectedAgents);
       const result = await unsyncFromPlatforms(selectedSkillsList, agentsList);
 
-      const platformResults = result.results.filter((r: any) => r.platform !== 'local');
-      const successCount = platformResults.filter((r: any) => r.status === 'success').length;
-      const failedResults = platformResults.filter((r: any) => r.status === 'error');
+      const platformResults = result.results.filter((r: SyncResult) => r.platform !== 'local');
+      const successCount = platformResults.filter((r: SyncResult) => r.status === 'success').length;
+      const failedResults = platformResults.filter((r: SyncResult) => r.status === 'error');
 
       if (failedResults.length > 0) {
         const failedMsg = failedResults
-          .map((r: any) => `• ${r.skill} → ${r.platform}: ${r.error || 'Unknown error'}`)
+          .map((r: SyncResult) => `• ${r.skill} → ${r.platform}: ${r.error || 'Unknown error'}`)
           .join('\n');
         alert(`Unsynced ${successCount} skill(s) successfully.\n\nFailed (${failedResults.length}):\n${failedMsg}`);
       } else {
@@ -346,10 +353,10 @@ export default function SkillsPage() {
       }
 
       for (const skillName of selectedSkillsList) {
-        const skillResults = result.results.filter((r: any) => r.skill === skillName);
+        const skillResults = result.results.filter((r: SyncResult) => r.skill === skillName);
         const removedPlatforms = skillResults
-          .filter((r: any) => r.status === 'success')
-          .map((r: any) => r.platform as Platform);
+          .filter((r: SyncResult) => r.status === 'success')
+          .map((r: SyncResult) => r.platform as Platform);
         setSyncedPlatforms(prev => ({
           ...prev,
           [skillName]: (prev[skillName] || []).filter(p => !removedPlatforms.includes(p)),
