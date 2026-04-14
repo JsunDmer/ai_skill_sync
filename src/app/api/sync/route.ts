@@ -110,7 +110,52 @@ export async function POST(request: NextRequest) {
       
       return NextResponse.json({ results });
     }
-    
+
+    if (action === 'unsync') {
+      if (!skills || !platforms || platforms.length === 0) {
+        return NextResponse.json({ error: 'Missing skills or platforms' }, { status: 400 });
+      }
+
+      const results: { skill: string; platform: string; status: string; error?: string }[] = [];
+
+      for (const skillName of skills) {
+        for (const platform of platforms as Platform[]) {
+          const targetBase = PLATFORM_PATHS[platform];
+          if (!targetBase) continue;
+
+          const targetPath = join(homedir(), targetBase, skillName);
+
+          try {
+            const stats = await fs.lstat(targetPath).catch(() => null);
+
+            if (!stats) {
+              results.push({ skill: skillName, platform, status: 'skipped', error: 'Not synced' });
+              continue;
+            }
+
+            if (stats.isSymbolicLink()) {
+              await fs.unlink(targetPath);
+              results.push({ skill: skillName, platform, status: 'success' });
+            } else if (stats.isDirectory()) {
+              await fs.rm(targetPath, { recursive: true, force: true });
+              results.push({ skill: skillName, platform, status: 'success' });
+            } else {
+              results.push({ skill: skillName, platform, status: 'error', error: 'Unknown file type' });
+            }
+          } catch (error) {
+            results.push({
+              skill: skillName,
+              platform,
+              status: 'error',
+              error: error instanceof Error ? error.message : 'Failed to unsync'
+            });
+          }
+        }
+      }
+
+      return NextResponse.json({ results });
+    }
+
     if (action === 'github-push') {
       if (!githubConfig?.repoUrl || !githubConfig?.token) {
         return NextResponse.json({ error: 'Missing GitHub config' }, { status: 400 });
