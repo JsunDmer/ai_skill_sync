@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Navigation } from '@/components/navigation';
-import { AgentIconGroup } from '@/components/agent-icons';
+import { AgentIcon } from '@/components/agent-icon';
 import { Skill, Platform } from '@/types/skill';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,8 @@ interface SkillCardProps {
   onToggle: (name: string) => void;
   onDelete: (name: string) => void;
   syncedPlatforms: Platform[];
+  loadingIcons: Set<Platform>;
+  onIconClick: (platform: Platform, isSynced: boolean) => void;
 }
 
 const SkillCard = memo(function SkillCard({
@@ -40,14 +42,23 @@ const SkillCard = memo(function SkillCard({
   onToggle,
   onDelete,
   syncedPlatforms,
+  loadingIcons,
+  onIconClick,
 }: SkillCardProps) {
   return (
     <div className="relative">
       <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-        <AgentIconGroup
-          platforms={SUPPORTED_PLATFORMS}
-          syncedPlatforms={syncedPlatforms}
-        />
+        <div className="flex items-center gap-1">
+          {SUPPORTED_PLATFORMS.map((platform) => (
+            <AgentIcon
+              key={platform}
+              platform={platform}
+              isSynced={syncedPlatforms.includes(platform)}
+              isLoading={loadingIcons.has(platform)}
+              onClick={() => onIconClick(platform, syncedPlatforms.includes(platform))}
+            />
+          ))}
+        </div>
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onToggle(skill.name)}
@@ -101,7 +112,7 @@ const SkillCard = memo(function SkillCard({
 });
 
 export default function SkillsPage() {
-  const { skills, isLoading, error, fetchSkills, deleteSkill, syncToPlatforms, pushToGithub } = useSkillStore();
+  const { skills, isLoading, error, fetchSkills, deleteSkill, syncToPlatforms, unsyncFromPlatforms, pushToGithub } = useSkillStore();
   const [activeTab, setActiveTab] = useState('all');
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
@@ -113,6 +124,7 @@ export default function SkillsPage() {
   const [syncedPlatforms, setSyncedPlatforms] = useState<SyncedPlatformsState>({});
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [selectedAgents, setSelectedAgents] = useState<Set<Platform>>(new Set(SUPPORTED_PLATFORMS));
+  const [loadingIcons, setLoadingIcons] = useState<Record<string, Set<Platform>>>({});
 
   useEffect(() => {
     fetchSkills();
@@ -180,6 +192,72 @@ export default function SkillsPage() {
       setSelectedSkills(new Set());
     } else {
       setSelectedSkills(new Set(filteredSkills.map(s => s.name)));
+    }
+  };
+
+  const handleIconClick = async (skillName: string, platform: Platform, isSynced: boolean) => {
+    if (isSyncing) return;
+
+    if (isSynced) {
+      const confirmed = confirm(`Remove sync with ${platform}?`);
+      if (!confirmed) return;
+
+      setLoadingIcons(prev => ({
+        ...prev,
+        [skillName]: new Set([...(prev[skillName] || []), platform]),
+      }));
+
+      try {
+        const result = await unsyncFromPlatforms([skillName], [platform]);
+        const platformResults = result.results.filter((r: any) => r.platform !== 'local');
+        const successCount = platformResults.filter((r: any) => r.status === 'success').length;
+        const failedResults = platformResults.filter((r: any) => r.status === 'error');
+
+        if (failedResults.length > 0) {
+          alert(`Failed to unsync: ${failedResults[0].error || 'Unknown error'}`);
+        } else if (successCount > 0) {
+          setSyncedPlatforms(prev => ({
+            ...prev,
+            [skillName]: (prev[skillName] || []).filter(p => p !== platform),
+          }));
+        }
+      } catch (e) {
+        alert('Unsync failed: ' + (e instanceof Error ? e.message : 'Unknown error'));
+      } finally {
+        setLoadingIcons(prev => {
+          const next = { ...prev };
+          next[skillName]?.delete(platform);
+          if (next[skillName]?.size === 0) delete next[skillName];
+          return next;
+        });
+      }
+    } else {
+      setLoadingIcons(prev => ({
+        ...prev,
+        [skillName]: new Set([...(prev[skillName] || []), platform]),
+      }));
+
+      try {
+        const result = await syncToPlatforms([skillName], [platform]);
+        const platformResults = result.results.filter((r: any) => r.platform !== 'local');
+        const successCount = platformResults.filter((r: any) => r.status === 'success').length;
+
+        if (successCount > 0) {
+          setSyncedPlatforms(prev => ({
+            ...prev,
+            [skillName]: [...new Set([...(prev[skillName] || []), platform])],
+          }));
+        }
+      } catch (e) {
+        alert('Sync failed: ' + (e instanceof Error ? e.message : 'Unknown error'));
+      } finally {
+        setLoadingIcons(prev => {
+          const next = { ...prev };
+          next[skillName]?.delete(platform);
+          if (next[skillName]?.size === 0) delete next[skillName];
+          return next;
+        });
+      }
     }
   };
 
@@ -338,6 +416,8 @@ export default function SkillsPage() {
               onToggle={toggleSkillSelection}
               onDelete={deleteSkill}
               syncedPlatforms={syncedPlatforms[skill.name] || []}
+              loadingIcons={loadingIcons[skill.name] || new Set()}
+              onIconClick={(platform, isSynced) => handleIconClick(skill.name, platform, isSynced)}
             />
           ))}
         </div>
