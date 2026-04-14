@@ -6,20 +6,26 @@ import Link from 'next/link';
 import { useSkillStore } from '@/stores/skill-store';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navigation } from '@/components/navigation';
 import { cn } from '@/lib/utils';
 
 export default function ImportSkillPage() {
   const router = useRouter();
-  const { fetchSkills, isLoading, setLoading } = useSkillStore();
+  const { fetchSkills, isLoading, setLoading, skills } = useSkillStore();
 
   const [importResult, setImportResult] = useState<{ success: string[]; failed: { filename: string; error: string }[] } | null>(null);
   const [importZipBase64, setImportZipBase64] = useState('');
   const [error, setError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  // 用户指定的 tag，留空则从 ZIP 路径推断
+  const [selectedTag, setSelectedTag] = useState('');
   const zipFileInputRef = useRef<HTMLInputElement>(null);
+
+  // 从已有技能提取所有 tags，用于快速选择
+  const existingTags = Array.from(new Set(skills.flatMap(s => s.tags))).sort();
 
   const processFile = async (file: File) => {
     setError('');
@@ -34,6 +40,10 @@ export default function ImportSkillPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      // 如果用户选了 tag，附带传给后端
+      if (selectedTag.trim()) {
+        formData.append('tag', selectedTag.trim());
+      }
       const response = await fetch('/api/skills', { method: 'POST', body: formData });
       const data = await response.json();
       if (data.error) {
@@ -125,45 +135,69 @@ export default function ImportSkillPage() {
             <CardHeader>
               <CardTitle>Import Skills</CardTitle>
               <CardDescription>
-                Import skills from a ZIP file. Skills will be saved to ~/.skill-sync/skills
+                Import skills from a ZIP file. Supports single-skill ZIPs (skill-folder/SKILL.md) and multi-skill bundles. Same-name skills will be replaced.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+
+              {/* Tag 选择区域 */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Category Tag
+                  <span className="text-muted-foreground font-normal ml-1">(optional — overrides ZIP path inference)</span>
+                </label>
+                <Input
+                  value={selectedTag}
+                  onChange={e => setSelectedTag(e.target.value)}
+                  placeholder="e.g. saic, frontend, data..."
+                  className="max-w-xs"
+                />
+                {existingTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {existingTags.map(tag => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setSelectedTag(tag === selectedTag ? '' : tag)}
+                        className={cn(
+                          'text-xs px-2.5 py-1 rounded-full border transition-colors',
+                          tag === selectedTag
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'bg-secondary text-secondary-foreground border-transparent hover:border-primary/40'
+                        )}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* 拖拽区域 */}
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                onClick={() => !isLoading && zipFileInputRef.current?.click()}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-3 p-10 border-2 border-dashed rounded-lg cursor-pointer transition-colors',
-                  isDragging
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50 hover:bg-accent/30'
+                  'border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer',
+                  isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'
                 )}
+                onClick={() => zipFileInputRef.current?.click()}
               >
                 <input
+                  ref={zipFileInputRef}
                   type="file"
                   accept=".zip"
-                  ref={zipFileInputRef}
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-                {isLoading ? (
-                  <svg className="w-8 h-8 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                ) : (
-                  <svg className="w-8 h-8 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                  </svg>
-                )}
-                <div className="text-center">
+                <div className="space-y-2">
                   <p className="text-sm font-medium">
-                    {isLoading ? 'Importing...' : 'Drop ZIP file here or click to select'}
+                    {isDragging ? 'Drop ZIP file here' : 'Click to upload or drag & drop'}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">Only .zip files are supported</p>
+                  <p className="text-xs text-muted-foreground">
+                    ZIP files only
+                  </p>
                 </div>
               </div>
 
@@ -171,39 +205,49 @@ export default function ImportSkillPage() {
               <div>
                 <button
                   type="button"
-                  onClick={() => setShowAdvanced(v => !v)}
-                  className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <svg className={cn('w-3 h-3 transition-transform', showAdvanced && 'rotate-90')} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                  Advanced: paste Base64
+                  {showAdvanced ? '▼' : '▶'} Advanced: Import from Base64
                 </button>
+
                 {showAdvanced && (
-                  <div className="mt-3 space-y-2">
+                  <div className="mt-4 space-y-3">
                     <Textarea
-                      id="importZipBase64"
                       value={importZipBase64}
                       onChange={e => setImportZipBase64(e.target.value)}
-                      placeholder="Paste ZIP file as Base64..."
-                      className="min-h-[100px] font-mono text-sm"
+                      placeholder="Paste ZIP file Base64 content here..."
+                      className="font-mono text-xs min-h-[120px]"
                     />
-                    <Button onClick={handleZipBase64Import} disabled={isLoading} variant="outline" size="sm">
+                    <Button
+                      onClick={handleZipBase64Import}
+                      disabled={isLoading || !importZipBase64.trim()}
+                      size="sm"
+                    >
                       {isLoading ? 'Importing...' : 'Import from Base64'}
                     </Button>
                   </div>
                 )}
               </div>
 
+              {/* 错误提示 */}
               {error && (
-                <p className="text-sm text-destructive">{error}</p>
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <p className="text-sm text-destructive">{error}</p>
+                </div>
               )}
 
+              {/* 导入结果 */}
               {importResult && (
-                <div className="p-4 bg-muted rounded-md">
+                <div className="p-4 bg-muted rounded-md space-y-2">
                   <h4 className="font-medium mb-2">Import Results</h4>
                   <p className="text-sm text-green-600">
                     Successfully imported: {importResult.success.length} skill(s)
+                    {importResult.success.length > 0 && (
+                      <span className="text-muted-foreground ml-1">
+                        ({importResult.success.join(', ')})
+                      </span>
+                    )}
                   </p>
                   {importResult.failed.length > 0 && (
                     <div className="mt-2">

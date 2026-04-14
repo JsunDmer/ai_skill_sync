@@ -43,28 +43,95 @@ function parseFrontmatter(content: string): { name?: string; description?: strin
   return result.name ? result : null;
 }
 
-function findSkillFolders(zip: JSZip): { folders: Map<string, JSZip.JSZipObject[]>, typeMap: Map<string, string> } {
+/**
+ * 兼容两种 ZIP 结构：
+ *   多技能包: root/type/skill/SKILL.md  (parts.length >= 4)
+ *   单技能包: skill/SKILL.md 或 SKILL.md (parts.length 1-3)
+ * 返回统一的 { folders, typeMap, sliceDepth }
+ * sliceDepth 用于确定 relativePath 的起始层级
+ */
+function findSkillFolders(zip: JSZip, overrideTag?: string): {
+  folders: Map<string, JSZip.JSZipObject[]>;
+  typeMap: Map<string, string>;
+  sliceDepthMap: Map<string, number>;
+} {
   const folders = new Map<string, JSZip.JSZipObject[]>();
   const typeMap = new Map<string, string>();
-  
-  Object.entries(zip.files).forEach(([filename, data]) => {
-    if (filename.includes('__MACOSX') || filename.includes('.DS_Store')) return;
-    if (data.dir) return;
-    
+  const sliceDepthMap = new Map<string, number>();
+
+  const allFiles = Object.entries(zip.files).filter(([filename, data]) => {
+    if (filename.includes('__MACOSX') || filename.includes('.DS_Store')) return false;
+    if (data.dir) return false;
+    return true;
+  });
+
+  // 检测是否有 SKILL.md（不区分大小写）
+  const hasSkillMd = allFiles.some(([filename]) =>
+    filename.split('/').pop()?.toLowerCase() === 'skill.md'
+  );
+
+  if (!hasSkillMd) return { folders, typeMap, sliceDepthMap };
+
+  // 找到所有 SKILL.md 文件，从路径推断结构
+  for (const [filename, data] of allFiles) {
     const parts = filename.split('/').filter(Boolean);
-    if (parts.length < 4) return;
-    
-    const typeFolder = parts[1];
-    const skillFolder = parts[2];
-    
+    const isSkillMd = parts[parts.length - 1]?.toLowerCase() === 'skill.md';
+    if (!isSkillMd) continue;
+
+    let skillFolder: string;
+    let typeFolder: string;
+    let sliceDepth: number;
+
+    if (parts.length === 1) {
+      // 结构: SKILL.md（根目录直接放）→ 用 ZIP 文件名作为文件夹名
+      skillFolder = '__root__';
+      typeFolder = overrideTag || '';
+      sliceDepth = 0;
+    } else if (parts.length === 2) {
+      // 结构: skill-folder/SKILL.md（单技能 ZIP 主流格式）
+      skillFolder = parts[0];
+      typeFolder = overrideTag || '';
+      sliceDepth = 1;
+    } else if (parts.length === 3) {
+      // 结构: type/skill/SKILL.md
+      skillFolder = parts[1];
+      typeFolder = overrideTag || parts[0];
+      sliceDepth = 2;
+    } else {
+      // 结构: root/type/skill/SKILL.md（多技能包原有格式）
+      skillFolder = parts[2];
+      typeFolder = overrideTag || parts[1];
+      sliceDepth = 3;
+    }
+
     if (!folders.has(skillFolder)) {
       folders.set(skillFolder, []);
       typeMap.set(skillFolder, typeFolder);
+      sliceDepthMap.set(skillFolder, sliceDepth);
     }
-    folders.get(skillFolder)!.push(data);
-  });
-  
-  return { folders, typeMap };
+  }
+
+  // 将所有文件分配到对应的技能文件夹
+  for (const [, data] of allFiles) {
+    const parts = data.name.split('/').filter(Boolean);
+
+    for (const [skillFolder, , ] of [...folders.entries()]) {
+      const sliceDepth = sliceDepthMap.get(skillFolder)!;
+      const skillPartIndex = sliceDepth - 1;
+
+      if (skillFolder === '__root__') {
+        folders.get(skillFolder)!.push(data);
+        break;
+      }
+
+      if (skillPartIndex >= 0 && parts[skillPartIndex] === skillFolder) {
+        folders.get(skillFolder)!.push(data);
+        break;
+      }
+    }
+  }
+
+  return { folders, typeMap, sliceDepthMap };
 }
 
 interface SkillMetadata {
@@ -132,75 +199,88 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const zipFile = formData.get('file') as File | null;
-    
+    // 前端可传 tag 覆盖 ZIP 推断的类型
+    const overrideTag = (formData.get('tag') as string | null) || undefined;
+
     if (!zipFile) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
-    
+
     if (!zipFile.name.endsWith('.zip')) {
       return NextResponse.json({ error: 'Only ZIP files supported' }, { status: 400 });
     }
-    
+
     const arrayBuffer = await zipFile.arrayBuffer();
     const zip = await JSZip.loadAsync(arrayBuffer);
-    const { folders, typeMap } = findSkillFolders(zip);
-    
+    const { folders, typeMap, sliceDepthMap } = findSkillFolders(zip, overrideTag);
+
     if (folders.size === 0) {
-      return NextResponse.json({ error: 'No skill folders found in ZIP' }, { status: 400 });
+      return NextResponse.json({ error: 'No skill folders found in ZIP. Make sure the ZIP contains a SKILL.md file.' }, { status: 400 });
     }
-    
+
     const success: string[] = [];
     const failed: { filename: string; error: string }[] = [];
-    
+
     for (const [folderName, files] of folders) {
-      const skillMdFile = files.find(f => 
-        f.name.endsWith('/SKILL.md') || 
-        f.name.endsWith('/SKILL.MD') ||
-        f.name.endsWith('/skill.md')
+      const sliceDepth = sliceDepthMap.get(folderName) ?? 3;
+
+      const skillMdFile = files.find(f =>
+        f.name.split('/').pop()?.toLowerCase() === 'skill.md'
       );
-      
+
       if (!skillMdFile) {
         failed.push({ filename: folderName, error: 'Missing SKILL.md file' });
         continue;
       }
-      
+
       try {
         const content = await skillMdFile.async('string');
         const parsed = parseFrontmatter(content);
-        
+
         if (!parsed || !parsed.name) {
-          failed.push({ filename: `${folderName}/SKILL.md`, error: 'Invalid SKILL.md format' });
+          failed.push({ filename: `${folderName}/SKILL.md`, error: 'Invalid SKILL.md format (missing name in frontmatter)' });
           continue;
         }
-        
+
         const typeFolder = typeMap.get(folderName) || '';
-        const skillDir = join(SKILLS_DIR, folderName);
+        // 使用 folderName 作为目录名（__root__ 时用 ZIP 文件名去掉 .zip）
+        const dirName = folderName === '__root__'
+          ? zipFile.name.replace(/\.zip$/i, '')
+          : folderName;
+        const skillDir = join(SKILLS_DIR, dirName);
+
+        // 同名替换：先删除旧目录，再重建
+        const exists = await fs.access(skillDir).then(() => true).catch(() => false);
+        if (exists) {
+          await fs.rm(skillDir, { recursive: true, force: true });
+        }
         await fs.mkdir(skillDir, { recursive: true });
-        
-        const allFiles: string[] = [];
+
+        // 写入所有文件，relativePath 从 sliceDepth 层开始
         for (const f of files) {
           if (f.name.includes('__MACOSX') || f.name.includes('.DS_Store')) continue;
-          const fileContent = await f.async('string');
-          const relativePath = f.name.split('/').slice(3).join('/');
+          const fileParts = f.name.split('/').filter(Boolean);
+          const relativePath = fileParts.slice(sliceDepth).join('/');
+          if (!relativePath) continue; // 跳过空路径（目录条目）
           const targetPath = join(skillDir, relativePath);
           await fs.mkdir(join(targetPath, '..'), { recursive: true });
+          const fileContent = await f.async('nodebuffer');
           await fs.writeFile(targetPath, fileContent);
-          allFiles.push(relativePath);
         }
-        
+
         const metadata: SkillMetadata = {
           name: parsed.name,
           tag: typeFolder,
           createdAt: new Date().toISOString(),
         };
         await fs.writeFile(join(skillDir, 'metadata.json'), JSON.stringify(metadata, null, 2));
-        
-        success.push(folderName);
+
+        success.push(dirName);
       } catch (e) {
         failed.push({ filename: folderName, error: e instanceof Error ? e.message : 'Unknown error' });
       }
     }
-    
+
     return NextResponse.json({ success, failed });
   } catch (error) {
     console.error('Import error:', error);
