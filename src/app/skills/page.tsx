@@ -123,6 +123,7 @@ export default function SkillsPage() {
   const [pushStatus, setPushStatus] = useState<string>('');
   const [syncedPlatforms, setSyncedPlatforms] = useState<SyncedPlatformsState>({});
   const [showSyncModal, setShowSyncModal] = useState(false);
+  const [showUnsyncModal, setShowUnsyncModal] = useState(false);
   const [selectedAgents, setSelectedAgents] = useState<Set<Platform>>(new Set(SUPPORTED_PLATFORMS));
   const [loadingIcons, setLoadingIcons] = useState<Record<string, Set<Platform>>>({});
 
@@ -267,6 +268,20 @@ export default function SkillsPage() {
     setShowSyncModal(true);
   };
 
+  const openUnsyncModal = () => {
+    if (selectedSkills.size === 0) return;
+
+    // Only show agents that are synced for at least one selected skill
+    const syncedAgents = new Set<Platform>();
+    for (const skillName of Array.from(selectedSkills)) {
+      const platforms = syncedPlatforms[skillName] || [];
+      platforms.forEach(p => syncedAgents.add(p));
+    }
+
+    setSelectedAgents(syncedAgents);
+    setShowUnsyncModal(true);
+  };
+
   const handleSync = async () => {
     if (selectedSkills.size === 0 || selectedAgents.size === 0) return;
     setShowSyncModal(false);
@@ -302,6 +317,46 @@ export default function SkillsPage() {
       }
     } catch (e) {
       alert('Sync failed: ' + (e instanceof Error ? e.message : 'Unknown error'));
+    } finally {
+      setIsSyncing(false);
+      setSelectedSkills(new Set());
+    }
+  };
+
+  const handleUnsync = async () => {
+    if (selectedSkills.size === 0 || selectedAgents.size === 0) return;
+    setShowUnsyncModal(false);
+    setIsSyncing(true);
+    try {
+      const selectedSkillsList = Array.from(selectedSkills);
+      const agentsList = Array.from(selectedAgents);
+      const result = await unsyncFromPlatforms(selectedSkillsList, agentsList);
+
+      const platformResults = result.results.filter((r: any) => r.platform !== 'local');
+      const successCount = platformResults.filter((r: any) => r.status === 'success').length;
+      const failedResults = platformResults.filter((r: any) => r.status === 'error');
+
+      if (failedResults.length > 0) {
+        const failedMsg = failedResults
+          .map((r: any) => `• ${r.skill} → ${r.platform}: ${r.error || 'Unknown error'}`)
+          .join('\n');
+        alert(`Unsynced ${successCount} skill(s) successfully.\n\nFailed (${failedResults.length}):\n${failedMsg}`);
+      } else {
+        alert(`Unsynced ${successCount} skill(s) from ${agentsList.join(', ')}`);
+      }
+
+      for (const skillName of selectedSkillsList) {
+        const skillResults = result.results.filter((r: any) => r.skill === skillName);
+        const removedPlatforms = skillResults
+          .filter((r: any) => r.status === 'success')
+          .map((r: any) => r.platform as Platform);
+        setSyncedPlatforms(prev => ({
+          ...prev,
+          [skillName]: (prev[skillName] || []).filter(p => !removedPlatforms.includes(p)),
+        }));
+      }
+    } catch (e) {
+      alert('Unsync failed: ' + (e instanceof Error ? e.message : 'Unknown error'));
     } finally {
       setIsSyncing(false);
       setSelectedSkills(new Set());
@@ -353,9 +408,18 @@ export default function SkillsPage() {
               Push to GitHub
             </Button>
             {selectedSkills.size > 0 && (
-              <Button onClick={openSyncModal} disabled={isSyncing}>
-                {isSyncing ? 'Syncing...' : `Sync ${selectedSkills.size} to Agents`}
-              </Button>
+              <>
+                <Button onClick={openSyncModal} disabled={isSyncing}>
+                  {isSyncing ? 'Syncing...' : `Sync ${selectedSkills.size} to Agents`}
+                </Button>
+                <Button
+                  onClick={openUnsyncModal}
+                  disabled={isSyncing}
+                  variant="outline"
+                >
+                  Unsync {selectedSkills.size} from Agents
+                </Button>
+              </>
             )}
             <Link href="/skills/new">
               <Button>Import Skills</Button>
@@ -504,6 +568,44 @@ export default function SkillsPage() {
                 disabled={selectedAgents.size === 0}
               >
                 确认同步
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unsync Modal */}
+      {showUnsyncModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background border rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Select Agents to Unsync From</h3>
+            <div className="space-y-3 mb-6">
+              {SUPPORTED_PLATFORMS.map((platform) => (
+                <div key={platform} className="flex items-center gap-3">
+                  <Checkbox
+                    id={`unsync-agent-${platform}`}
+                    checked={selectedAgents.has(platform)}
+                    onCheckedChange={(checked) => {
+                      setSelectedAgents(prev => {
+                        const next = new Set(prev);
+                        if (checked) next.add(platform);
+                        else next.delete(platform);
+                        return next;
+                      });
+                    }}
+                  />
+                  <label htmlFor={`unsync-agent-${platform}`} className="text-sm font-medium cursor-pointer">
+                    {PLATFORM_LABELS[platform]}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowUnsyncModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUnsync} disabled={selectedAgents.size === 0}>
+                Unsync
               </Button>
             </div>
           </div>
