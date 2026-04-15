@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -11,8 +11,11 @@ import { Navigation } from '@/components/navigation';
 export default function SkillDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const id = params.id as string;
   const { skills, deleteSkill } = useSkillStore();
+  const fromTab = searchParams.get('from') || 'all';
+  const backHref = fromTab === 'all' ? '/skills' : `/skills?tab=${encodeURIComponent(fromTab)}`;
 
   const skill = skills.find(s => s.name === decodeURIComponent(id));
 
@@ -20,7 +23,7 @@ export default function SkillDetailPage() {
     if (!skill) return;
     if (confirm('Are you sure you want to delete this skill?')) {
       await deleteSkill(skill.content.filePath);
-      router.push('/skills');
+      router.push(backHref);
     }
   };
 
@@ -31,7 +34,7 @@ export default function SkillDetailPage() {
         <main className="container mx-auto px-4 py-8">
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-4">Skill not found</p>
-            <Link href="/skills">
+            <Link href={backHref}>
               <Button variant="outline">Back to skills</Button>
             </Link>
           </div>
@@ -46,7 +49,7 @@ export default function SkillDetailPage() {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1 min-w-0">
-            <Link href="/skills" className="text-sm text-muted-foreground hover:underline">
+            <Link href={backHref} className="text-sm text-muted-foreground hover:underline">
               ← Back to skills
             </Link>
             <h1 className="text-3xl font-bold mt-2">{skill.name}</h1>

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, memo, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useSkillStore } from '@/stores/skill-store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +37,7 @@ interface SyncedPlatformsState {
 interface SkillCardProps {
   skill: Skill;
   isSelected: boolean;
+  activeTab: string;
   onToggle: (name: string) => void;
   onDelete: (name: string) => void;
   syncedPlatforms: Platform[];
@@ -46,6 +48,7 @@ interface SkillCardProps {
 const SkillCard = memo(function SkillCard({
   skill,
   isSelected,
+  activeTab,
   onToggle,
   onDelete,
   syncedPlatforms,
@@ -89,7 +92,7 @@ const SkillCard = memo(function SkillCard({
           </svg>
         </Button>
       </div>
-      <Link href={`/skills/${encodeURIComponent(skill.name)}`}>
+      <Link href={`/skills/${encodeURIComponent(skill.name)}?from=${encodeURIComponent(activeTab)}`}>
         <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-[180px] flex flex-col">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">{skill.name}</CardTitle>
@@ -120,7 +123,8 @@ const SkillCard = memo(function SkillCard({
 
 export default function SkillsPage() {
   const { skills, isLoading, error, fetchSkills, deleteSkill, syncToPlatforms, unsyncFromPlatforms, pushToGithub } = useSkillStore();
-  const [activeTab, setActiveTab] = useState('all');
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'all');
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
   const [showGithubModal, setShowGithubModal] = useState(false);
@@ -484,6 +488,7 @@ export default function SkillsPage() {
               key={skill.name}
               skill={skill}
               isSelected={selectedSkills.has(skill.name)}
+              activeTab={activeTab}
               onToggle={toggleSkillSelection}
               onDelete={deleteSkill}
               syncedPlatforms={syncedPlatforms[skill.name] || []}
