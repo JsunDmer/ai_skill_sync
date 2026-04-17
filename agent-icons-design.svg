@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200">
+  <defs>
+    <linearGradient id="opencodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="claudeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D97706"/>
+      <stop offset="100%" style="stop-color:#C15F3C"/>
+    </linearGradient>
+    <linearGradient id="cursorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669"/>
+      <stop offset="100%" style="stop-color:#10B981"/>
+    </linearGradient>
+    <linearGradient id="traceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="800" height="200" fill="#f8f9fa"/>
+  
+  <!-- OpenCode -->
+  <g transform="translate(100, 50)">
+    <rect x="0" y="0" width="80" height="80" rx="16" fill="url(#opencodeGrad)"/>
+    <path d="M20 55 L35 25 L50 55 L65 25" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M25 40 L40 60 L55 40 L70 60" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  </g>
+  <text x="140" y="95" font-family="system-ui" font-size="14" fill="#333" font-weight="600">OpenCode</text>
+  <text x="140" y="115" font-family="system-ui" font-size="11" fill="#666">终端优先 · 深邃蓝黑</text>
+  
+  <!-- Claude Code -->
+  <g transform="translate(250, 50)">
+    <rect x="0" y="0" width="80" height="80" rx="16" fill="url(#claudeGrad)"/>
+    <path d="M40 15 L55 35 L40 55 L25 35 Z" fill="#fff"/>
+    <path d="M40 35 L55 55 L40 65 L25 55 Z" fill="#fff" opacity="0.7"/>
+    <path d="M40 35 L25 55 L40 65 L55 55 Z" fill="#fff" opacity="0.7"/>
+  </g>
+  <text x="290" y="95" font-family="system-ui" font-size="14" fill="#333" font-weight="600">Claude</text>
+  <text x="290" y="115" font-family="system-ui" font-size="11" fill="#666">Anthropic · 琥珀橙红</text>
+  
+  <!-- Cursor -->
+  <g transform="translate(400, 50)">
+    <rect x="0" y="0" width="80" height="80" rx="16" fill="url(#cursorGrad)"/>
+    <path d="M25 15 L55 15 L55 45 L40 45 L40 30 L25 30 Z" fill="#fff"/>
+    <path d="M25 45 L55 45 L55 65 L25 65 Z" fill="#fff" opacity="0.7"/>
+    <path d="M25 45 L40 45 L40 65 L25 65 Z" fill="#fff" opacity="0.4"/>
+  </g>
+  <text x="440" y="95" font-family="system-ui" font-size="14" fill="#333" font-weight="600">Cursor</text>
+  <text x="440" y="115" font-family="system-ui" font-size="11" fill="#666">AI IDE · 翡翠绿</text>
+  
+  <!-- Trace-CN -->
+  <g transform="translate(550, 50)">
+    <rect x="0" y="0" width="80" height="80" rx="16" fill="url(#traceGrad)"/>
+    <circle cx="40" cy="35" r="12" fill="none" stroke="#fff" stroke-width="3"/>
+    <path d="M40 23 L40 35 L50 42" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M30 55 L40 65 L50 55" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="590" y="95" font-family="system-ui" font-size="14" fill="#333" font-weight="600">Trace CN</text>
+  <text x="590" y="115" font-family="system-ui" font-size="11" fill="#666">AI 助手 · 神秘紫</text>
+</svg>
