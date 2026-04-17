@@ -1,7 +1,6 @@
 'use client';
 
 import { Platform } from '@/types/skill';
-import { OpenCode, Claude, Cursor } from '@lobehub/icons';
 
 interface AgentIconProps {
   platform: Platform;
@@ -10,32 +9,27 @@ interface AgentIconProps {
   onClick?: () => void;
 }
 
-const PLATFORM_CONFIG: Record<Platform, { icon: React.ReactNode; color: string }> = {
+const PLATFORM_ICONS: Record<Platform, { src: string; color: string }> = {
   opencode: {
-    icon: <OpenCode size={16} />,
+    src: 'https://unpkg.com/@lobehub/icons-static-svg@latest/icons/opencode.svg',
     color: '#1a1a2e',
   },
   claude: {
-    icon: <Claude.Color size={16} />,
+    src: 'https://unpkg.com/@lobehub/icons-static-svg@latest/icons/claude.svg',
     color: '#D97757',
   },
   'trace-cn': {
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="9" fill="#6366F1"/>
-        <path d="M12 7v5l3 2" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
+    src: '',
     color: '#6366F1',
   },
   cursor: {
-    icon: <Cursor size={16} />,
+    src: 'https://unpkg.com/@lobehub/icons-static-svg@latest/icons/cursor.svg',
     color: '#10B981',
   },
 };
 
 export function AgentIcon({ platform, isSynced, isLoading, onClick }: AgentIconProps) {
-  const config = PLATFORM_CONFIG[platform];
+  const icon = PLATFORM_ICONS[platform];
 
   return (
     <button
@@ -49,15 +43,20 @@ export function AgentIcon({ platform, isSynced, isLoading, onClick }: AgentIconP
           : 'opacity-40 cursor-pointer hover:opacity-60'
       }`}
       title={`${isSynced ? 'Unsync from' : 'Sync to'} ${platform}`}
-      style={{ color: isSynced ? config.color : undefined }}
+      style={{ color: isSynced ? icon.color : undefined }}
     >
       {isLoading ? (
         <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
         </svg>
+      ) : platform === 'trace-cn' ? (
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" fill="#6366F1"/>
+          <path d="M12 7v5l3 2" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       ) : (
-        config.icon
+        <img src={icon.src} alt={platform} width={16} height={16} />
       )}
     </button>
   );
