@@ -11,7 +11,7 @@ interface AgentIconProps {
 
 const PLATFORM_ICONS: Record<Platform, { svg: string; color: string }> = {
   opencode: {
-    color: '#1a1a2e',
+    color: '#3B82F6',
     svg: '<svg viewBox="0 0 24 24"><path d="M16 6H8v12h8V6zm4 16H4V2h16v20z" fill="currentColor"/></svg>',
   },
   claude: {
