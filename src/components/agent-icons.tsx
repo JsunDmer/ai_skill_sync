@@ -23,7 +23,7 @@ const PLATFORM_CONFIG: Record<Platform, { name: string; src: string; color: stri
   'trace-cn': {
     name: 'Trace CN',
     src: '',
-    color: '#6366F1',
+    color: '#10B981',
   },
   cursor: {
     name: 'Cursor',
@@ -40,39 +40,21 @@ export function AgentIconBadge({ platform, isSynced, className }: AgentIconProps
       className={cn(
         'flex items-center justify-center w-7 h-7 rounded-md',
         isSynced
-          ? `text-[${config.color}] bg-[${config.color}]/10`
+          ? 'bg-[color-mix(in_srgb,_var(--icon-color)_12%,_transparent)]'
           : 'text-muted-foreground bg-muted',
         className
       )}
+      style={{ '--icon-color': config.color } as React.CSSProperties}
       title={`${config.name}${isSynced ? ' (已同步)' : ' (未同步)'}`}
     >
       {platform === 'trace-cn' ? (
         <svg width="16" height="16" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="9" fill="#6366F1"/>
+          <circle cx="12" cy="12" r="9" fill="#10B981"/>
           <path d="M12 7v5l3 2" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       ) : (
         <img src={config.src} alt={config.name} width={16} height={16} />
       )}
-    </div>
-  );
-}
-
-export function AgentIcon({ platform, isSynced, className }: AgentIconProps) {
-  const config = PLATFORM_CONFIG[platform];
-
-  return (
-    <div
-      className={cn(
-        'flex items-center justify-center w-7 h-7 rounded-md',
-        isSynced
-          ? `${config.color} bg-current/10`
-          : 'text-muted-foreground bg-muted',
-        className
-      )}
-      title={`${config.name}${isSynced ? ' (已同步)' : ' (未同步)'}`}
-    >
-      {config.icon}
     </div>
   );
 }

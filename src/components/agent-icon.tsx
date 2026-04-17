@@ -20,7 +20,7 @@ const PLATFORM_ICONS: Record<Platform, { src: string; color: string }> = {
   },
   'trace-cn': {
     src: '',
-    color: '#6366F1',
+    color: '#10B981',
   },
   cursor: {
     src: 'https://unpkg.com/@lobehub/icons-static-svg@latest/icons/cursor.svg',
@@ -52,7 +52,7 @@ export function AgentIcon({ platform, isSynced, isLoading, onClick }: AgentIconP
         </svg>
       ) : platform === 'trace-cn' ? (
         <svg width="16" height="16" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="9" fill="#6366F1"/>
+          <circle cx="12" cy="12" r="9" fill="#10B981"/>
           <path d="M12 7v5l3 2" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       ) : (
