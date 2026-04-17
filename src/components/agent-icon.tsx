@@ -29,7 +29,7 @@ const PLATFORM_CONFIG: Record<Platform, { icon: React.ReactNode; color: string }
     color: '#6366F1',
   },
   cursor: {
-    icon: <Cursor.Color size={16} />,
+    icon: <Cursor size={16} />,
     color: '#10B981',
   },
 };
