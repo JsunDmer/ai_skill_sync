@@ -31,16 +31,18 @@ export function SkillPreview({
               {skill.repo}
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="p-4 border-b">
-          <div className="flex gap-4 text-sm text-gray-600">
-            <span className="flex items-center gap-1">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-sm text-gray-500">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
               {skill.stars}
             </span>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+        <div className="p-4 border-b">
+          <div className="flex gap-4 text-sm text-gray-600">
             {skill.category && (
               <span className="px-2 py-0.5 bg-gray-100 rounded">类别: {skill.category}</span>
             )}
