@@ -8,7 +8,6 @@ import { SkillCard } from '@/components/SkillCard';
 import { SkillPreview } from '@/components/SkillPreview';
 import {
   searchSkills,
-  aiSearchSkills,
   getSkillContent,
   extractRepoInfo,
   SkillsMPSkill,
@@ -23,19 +22,16 @@ export default function ImportPage() {
   const [selectedSkill, setSelectedSkill] = useState<SkillsMPSkill | null>(null);
   const [previewContent, setPreviewContent] = useState('');
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(true);
 
   useEffect(() => {
     const config = getConfig();
     if (!config?.apiKey) {
-      setHasApiKey(false);
       setError('请先设置 SkillsMP API Key');
     }
   }, []);
 
-  const handleSearch = async (query: string, isAI: boolean) => {
-    if (!hasApiKey) {
-      setError('请先设置 SkillsMP API Key');
+  const handleSearch = async (query: string) => {
+    if (error?.includes('API Key')) {
       return;
     }
     setIsLoading(true);
@@ -43,12 +39,7 @@ export default function ImportPage() {
     setSkills([]);
 
     try {
-      let result;
-      if (isAI) {
-        result = await aiSearchSkills(query);
-      } else {
-        result = await searchSkills({ query, sortBy: 'stars' });
-      }
+      const result = await searchSkills({ query, sortBy: 'stars' });
       setSkills(result.skills);
     } catch (e) {
       setError(e instanceof Error ? e.message : '搜索失败');
@@ -138,7 +129,7 @@ export default function ImportPage() {
             {['react', 'python', 'docker', 'testing', 'security'].map((tag) => (
               <button
                 key={tag}
-                onClick={() => handleSearch(tag, false)}
+                onClick={() => handleSearch(tag)}
                 className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200"
               >
                 {tag}

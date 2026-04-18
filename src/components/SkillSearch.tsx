@@ -4,18 +4,17 @@ import { useState } from 'react';
 import { Search } from 'lucide-react';
 
 interface SkillSearchProps {
-  onSearch: (query: string, isAI: boolean) => void;
+  onSearch: (query: string) => void;
   isLoading?: boolean;
 }
 
 export function SkillSearch({ onSearch, isLoading }: SkillSearchProps) {
   const [query, setQuery] = useState('');
-  const [isAI, setIsAI] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      onSearch(query.trim(), isAI);
+      onSearch(query.trim());
     }
   };
 
@@ -34,18 +33,8 @@ export function SkillSearch({ onSearch, isLoading }: SkillSearchProps) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         </div>
         <button
-          type="button"
-          onClick={() => setIsAI(!isAI)}
-          className={`px-4 py-2 rounded-lg border ${
-            isAI ? 'bg-purple-500 text-white' : 'bg-gray-100'
-          }`}
-          disabled={isLoading}
-        >
-          AI 搜索
-        </button>
-        <button
           type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+          className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
           disabled={isLoading || !query.trim()}
         >
           {isLoading ? '搜索中...' : '搜索'}
