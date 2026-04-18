@@ -46,7 +46,6 @@ export function setConfig(config: SkillsMPConfig): void {
 
 export async function searchSkills(params: SearchParams): Promise<SearchResult> {
   const config = getConfig();
-  console.log('SkillsMP config:', config);
   if (!config?.apiKey) {
     throw new Error('MISSING_API_KEY');
   }
@@ -61,9 +60,6 @@ export async function searchSkills(params: SearchParams): Promise<SearchResult> 
   if (sortBy) searchParams.set('sortBy', sortBy);
   if (category) searchParams.set('category', category);
   if (occupation) searchParams.set('occupation', occupation);
-
-  const url = `${config.baseUrl || DEFAULT_BASE_URL}/skills/search?${searchParams}`;
-  console.log('Fetching:', url);
 
   const response = await fetch(
     `${config.baseUrl || DEFAULT_BASE_URL}/skills/search?${searchParams}`,

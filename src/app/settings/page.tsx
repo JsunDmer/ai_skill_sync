@@ -26,6 +26,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const skillsmpConfig = getConfig();
+    console.log('Loaded SkillsMP config:', skillsmpConfig);
     if (skillsmpConfig?.apiKey) {
       setSkillsmpApiKey(skillsmpConfig.apiKey);
     }
