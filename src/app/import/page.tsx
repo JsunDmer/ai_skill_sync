@@ -59,15 +59,18 @@ export default function ImportPage() {
 
     let owner = '';
     let repo = '';
+    let subPath = '';
 
     if (skill.githubUrl) {
       const info = extractRepoInfo(skill.githubUrl);
       owner = info.owner;
       repo = info.repo;
+      subPath = info.subPath;
     } else if (skill.repo) {
       const info = extractRepoInfo(skill.repo);
       owner = info.owner;
       repo = info.repo;
+      subPath = info.subPath;
     }
 
     if (!owner || !repo) {
@@ -78,7 +81,7 @@ export default function ImportPage() {
 
     let content = '';
     try {
-      content = await getSkillContent(owner, repo);
+      content = await getSkillContent(owner, repo, subPath);
     } catch {
       // GitHub fetch failed, use fallback
     }
@@ -95,21 +98,24 @@ export default function ImportPage() {
     try {
       let owner = '';
       let repo = '';
+      let subPath = '';
       let content = '';
 
       if (skill.githubUrl) {
         const info = extractRepoInfo(skill.githubUrl);
         owner = info.owner;
         repo = info.repo;
+        subPath = info.subPath;
       } else if (skill.repo) {
         const info = extractRepoInfo(skill.repo);
         owner = info.owner;
         repo = info.repo;
+        subPath = info.subPath;
       }
 
       if (owner && repo) {
         try {
-          content = await getSkillContent(owner, repo);
+          content = await getSkillContent(owner, repo, subPath);
         } catch {
           // GitHub fetch failed, use fallback content
         }

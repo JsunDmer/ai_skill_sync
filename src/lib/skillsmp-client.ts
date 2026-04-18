@@ -147,21 +147,26 @@ export async function aiSearchSkills(query: string, limit = 20): Promise<SearchR
   };
 }
 
-export async function getSkillContent(owner: string, repo: string): Promise<string> {
+export async function getSkillContent(
+  owner: string,
+  repo: string,
+  subPath = ''
+): Promise<string> {
   const cleanOwner = owner.replace(/\.git$/, '');
   const cleanRepo = repo.replace(/\.git$/, '').replace(/^tree\/[^/]+\//, '');
-  
+  const path = subPath ? `${subPath}/SKILL.md` : 'SKILL.md';
+
   if (!cleanOwner || !cleanRepo) {
     throw new Error('SKILL_NOT_FOUND');
   }
-  
+
   const response = await fetch(
-    `https://raw.githubusercontent.com/${cleanOwner}/${cleanRepo}/main/SKILL.md`
+    `https://raw.githubusercontent.com/${cleanOwner}/${cleanRepo}/main/${path}`
   );
 
   if (!response.ok) {
     const masterResponse = await fetch(
-      `https://raw.githubusercontent.com/${cleanOwner}/${cleanRepo}/master/SKILL.md`
+      `https://raw.githubusercontent.com/${cleanOwner}/${cleanRepo}/master/${path}`
     );
     if (!masterResponse.ok) {
       throw new Error('SKILL_NOT_FOUND');
@@ -172,19 +177,37 @@ export async function getSkillContent(owner: string, repo: string): Promise<stri
   return response.text();
 }
 
-export function extractRepoInfo(repoString: string): { owner: string; repo: string } {
+export function extractRepoInfo(
+  repoString: string
+): { owner: string; repo: string; subPath: string } {
   if (!repoString) {
-    return { owner: '', repo: '' };
+    return { owner: '', repo: '', subPath: '' };
   }
-  
-  const match = repoString.match(/github\.com[/:]([^/]+)[/]([^/]+)/);
-  if (match) {
-    return { owner: match[1], repo: match[2] };
+
+  const treeMatch = repoString.match(
+    /github\.com\/([^/]+)\/([^/]+)\/tree\/[^/]+\/(.+)$/
+  );
+  if (treeMatch) {
+    return {
+      owner: treeMatch[1],
+      repo: treeMatch[2],
+      subPath: treeMatch[3],
+    };
   }
-  
+
+  const simpleMatch = repoString.match(/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?$/);
+  if (simpleMatch) {
+    return {
+      owner: simpleMatch[1],
+      repo: simpleMatch[2],
+      subPath: '',
+    };
+  }
+
   const parts = repoString.split('/');
   return {
     owner: parts[0] || '',
     repo: parts[1] || '',
+    subPath: '',
   };
 }
