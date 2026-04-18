@@ -65,8 +65,10 @@ export async function searchSkills(params: SearchParams): Promise<SearchResult> 
     `${config.baseUrl || DEFAULT_BASE_URL}/skills/search?${searchParams}`,
     {
       headers: {
-        Authorization: `Bearer ${config.apiKey}`,
+        'Authorization': `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json',
       },
+      mode: 'cors',
     }
   );
 
