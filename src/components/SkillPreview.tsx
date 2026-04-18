@@ -26,10 +26,15 @@ export function SkillPreview({
         <div className="flex items-start justify-between p-4 border-b">
           <div>
             <h2 className="text-xl font-medium text-gray-900">{skill.name}</h2>
-            <p className="text-sm text-gray-500 flex items-center gap-1">
+            <a
+              href={skill.repo?.startsWith('http') ? skill.repo : `https://github.com/${skill.repo}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+            >
               <FolderOpen className="w-3 h-3" />
               {skill.repo}
-            </p>
+            </a>
           </div>
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1 text-sm text-gray-500">
