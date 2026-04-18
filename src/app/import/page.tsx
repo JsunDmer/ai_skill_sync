@@ -57,41 +57,38 @@ export default function ImportPage() {
     setIsPreviewLoading(true);
     setPreviewContent('加载中...');
 
-    try {
-      let owner = '';
-      let repo = '';
-      
-      console.log('Preview skill:', skill);
-      
-      if (skill.githubUrl) {
-        const info = extractRepoInfo(skill.githubUrl);
-        owner = info.owner;
-        repo = info.repo;
-        console.log('From githubUrl:', owner, repo);
-      } else if (skill.repo) {
-        const info = extractRepoInfo(skill.repo);
-        owner = info.owner;
-        repo = info.repo;
-        console.log('From repo:', owner, repo);
-      }
-      
-      if (!owner || !repo) {
-        console.log('No owner/repo, using fallback');
-        setPreviewContent(`# ${skill.name}\n\n${skill.description}\n\n来源: ${skill.repo || skill.author}`);
-        setIsPreviewLoading(false);
-        return;
-      }
-      
-      console.log('Fetching content for:', owner, repo);
-      const content = await getSkillContent(owner, repo);
-      console.log('Content fetched, length:', content.length);
-      setPreviewContent(content);
-    } catch (e) {
-      console.log('Error:', e);
-      setPreviewContent(`# ${skill.name}\n\n${skill.description}\n\n来源: ${skill.repo || skill.author}\n\n(无法加载完整内容)`);
-    } finally {
-      setIsPreviewLoading(false);
+    let owner = '';
+    let repo = '';
+
+    if (skill.githubUrl) {
+      const info = extractRepoInfo(skill.githubUrl);
+      owner = info.owner;
+      repo = info.repo;
+    } else if (skill.repo) {
+      const info = extractRepoInfo(skill.repo);
+      owner = info.owner;
+      repo = info.repo;
     }
+
+    if (!owner || !repo) {
+      setPreviewContent(`# ${skill.name}\n\n${skill.description}\n\n来源: ${skill.repo || skill.author}`);
+      setIsPreviewLoading(false);
+      return;
+    }
+
+    let content = '';
+    try {
+      content = await getSkillContent(owner, repo);
+    } catch {
+      // GitHub fetch failed, use fallback
+    }
+
+    if (content) {
+      setPreviewContent(content);
+    } else {
+      setPreviewContent(`# ${skill.name}\n\n${skill.description}\n\n来源: ${skill.repo || skill.author}\n\n(使用备用内容)`);
+    }
+    setIsPreviewLoading(false);
   };
 
   const handleImport = async (skill: SkillsMPSkill) => {
