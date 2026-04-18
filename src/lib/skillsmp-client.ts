@@ -61,15 +61,17 @@ export async function searchSkills(params: SearchParams): Promise<SearchResult> 
   if (category) searchParams.set('category', category);
   if (occupation) searchParams.set('occupation', occupation);
 
-  const response = await fetch(
-    `${config.baseUrl || DEFAULT_BASE_URL}/skills/search?${searchParams}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
-      },
-      credentials: 'omit',
-    }
-  );
+  const url = `${config.baseUrl || DEFAULT_BASE_URL}/skills/search?${searchParams}`;
+  console.log('SkillsMP search URL:', url);
+  console.log('SkillsMP apiKey:', config.apiKey?.substring(0, 10) + '...');
+
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${config.apiKey}`,
+    },
+  });
+
+  console.log('Response status:', response.status);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
