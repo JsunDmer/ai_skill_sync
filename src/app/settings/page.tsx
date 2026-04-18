@@ -33,8 +33,10 @@ export default function SettingsPage() {
   }, []);
 
   const handleSaveSkillsMP = () => {
+    console.log('Saving skillsmpApiKey:', skillsmpApiKey);
     setConfig({ apiKey: skillsmpApiKey });
     setSavedSkillsmp(true);
+    alert('已保存 API Key: ' + skillsmpApiKey.substring(0, 10) + '...');
     setTimeout(() => setSavedSkillsmp(false), 2000);
   };
 
