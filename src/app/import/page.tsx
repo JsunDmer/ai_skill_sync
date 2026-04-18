@@ -40,7 +40,8 @@ export default function ImportPage() {
 
     try {
       const result = await searchSkills({ query, sortBy: 'stars' });
-      setSkills(result.skills);
+      console.log('Search result:', result);
+      setSkills(result.skills || []);
     } catch (e) {
       setError(e instanceof Error ? e.message : '搜索失败');
     } finally {
