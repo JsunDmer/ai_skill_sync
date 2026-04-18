@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Settings } from 'lucide-react';
+import { Navigation } from '@/components/navigation';
 import { SkillSearch } from '@/components/SkillSearch';
 import { SkillCard } from '@/components/SkillCard';
 import { SkillPreview } from '@/components/SkillPreview';
@@ -128,7 +127,9 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="container mx-auto p-4">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">外部技能导入</h1>
         <Link
@@ -183,6 +184,7 @@ export default function ImportPage() {
         onClose={() => setSelectedSkill(null)}
         onImport={handleImport}
       />
+      </main>
     </div>
   );
 }
