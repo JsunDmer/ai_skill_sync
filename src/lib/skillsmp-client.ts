@@ -96,10 +96,13 @@ export async function searchSkills(params: SearchParams): Promise<SearchResult> 
   }
 
   const data = await response.json();
-  const skills = (data.data || []).map((s: Record<string, unknown>) => normalizeSkill(s));
+  const skillsList = data.data?.skills || [];
+  const skills = Array.isArray(skillsList) 
+    ? skillsList.map((s: Record<string, unknown>) => normalizeSkill(s))
+    : [];
   return {
     skills,
-    total: data.total || 0,
+    total: data.data?.pagination?.total || 0,
   };
 }
 
