@@ -61,25 +61,33 @@ export default function ImportPage() {
       let owner = '';
       let repo = '';
       
+      console.log('Preview skill:', skill);
+      
       if (skill.githubUrl) {
         const info = extractRepoInfo(skill.githubUrl);
         owner = info.owner;
         repo = info.repo;
+        console.log('From githubUrl:', owner, repo);
       } else if (skill.repo) {
         const info = extractRepoInfo(skill.repo);
         owner = info.owner;
         repo = info.repo;
+        console.log('From repo:', owner, repo);
       }
       
       if (!owner || !repo) {
+        console.log('No owner/repo, using fallback');
         setPreviewContent(`# ${skill.name}\n\n${skill.description}\n\n来源: ${skill.repo || skill.author}`);
         setIsPreviewLoading(false);
         return;
       }
       
+      console.log('Fetching content for:', owner, repo);
       const content = await getSkillContent(owner, repo);
+      console.log('Content fetched, length:', content.length);
       setPreviewContent(content);
-    } catch {
+    } catch (e) {
+      console.log('Error:', e);
       setPreviewContent(`# ${skill.name}\n\n${skill.description}\n\n来源: ${skill.repo || skill.author}\n\n(无法加载完整内容)`);
     } finally {
       setIsPreviewLoading(false);
