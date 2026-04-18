@@ -5,7 +5,8 @@ export interface SkillsMPSkill {
   repo: string;
   description: string;
   stars: number;
-  recent: string;
+  updatedAt: string;
+  githubUrl?: string;
   category?: string;
   occupation?: string;
 }
@@ -132,13 +133,16 @@ export async function aiSearchSkills(query: string, limit = 20): Promise<SearchR
 }
 
 export async function getSkillContent(owner: string, repo: string): Promise<string> {
+  const cleanOwner = owner.replace(/\.git$/, '');
+  const cleanRepo = repo.replace(/\.git$/, '').replace(/^tree\/[^/]+\//, '');
+  
   const response = await fetch(
-    `https://raw.githubusercontent.com/${owner}/${repo}/main/SKILL.md`
+    `https://raw.githubusercontent.com/${cleanOwner}/${cleanRepo}/main/SKILL.md`
   );
 
   if (!response.ok) {
     const masterResponse = await fetch(
-      `https://raw.githubusercontent.com/${owner}/${repo}/master/SKILL.md`
+      `https://raw.githubusercontent.com/${cleanOwner}/${cleanRepo}/master/SKILL.md`
     );
     if (!masterResponse.ok) {
       throw new Error('SKILL_NOT_FOUND');
@@ -150,9 +154,18 @@ export async function getSkillContent(owner: string, repo: string): Promise<stri
 }
 
 export function extractRepoInfo(repoString: string): { owner: string; repo: string } {
+  if (!repoString) {
+    return { owner: '', repo: '' };
+  }
+  
+  const match = repoString.match(/github\.com[/:]([^/]+)/([^/]+)/?/);
+  if (match) {
+    return { owner: match[1], repo: match[2] };
+  }
+  
   const parts = repoString.split('/');
   return {
-    owner: parts[0],
-    repo: parts[1],
+    owner: parts[0] || '',
+    repo: parts[1] || '',
   };
 }
