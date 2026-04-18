@@ -23,15 +23,21 @@ export default function ImportPage() {
   const [selectedSkill, setSelectedSkill] = useState<SkillsMPSkill | null>(null);
   const [previewContent, setPreviewContent] = useState('');
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(true);
 
   useEffect(() => {
     const config = getConfig();
     if (!config?.apiKey) {
+      setHasApiKey(false);
       setError('请先设置 SkillsMP API Key');
     }
   }, []);
 
   const handleSearch = async (query: string, isAI: boolean) => {
+    if (!hasApiKey) {
+      setError('请先设置 SkillsMP API Key');
+      return;
+    }
     setIsLoading(true);
     setError(null);
     setSkills([]);
@@ -60,7 +66,7 @@ export default function ImportPage() {
       const { owner, repo } = extractRepoInfo(skill.repo);
       const content = await getSkillContent(owner, repo);
       setPreviewContent(content);
-    } catch (e) {
+    } catch {
       setPreviewContent('无法加载技能内容');
     } finally {
       setIsPreviewLoading(false);
