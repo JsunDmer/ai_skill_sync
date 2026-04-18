@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Navigation } from '@/components/navigation';
 import { SkillSearch } from '@/components/SkillSearch';
@@ -89,7 +91,7 @@ export default function ImportPage() {
       let owner = '';
       let repo = '';
       let content = '';
-      
+
       if (skill.githubUrl) {
         const info = extractRepoInfo(skill.githubUrl);
         owner = info.owner;
@@ -99,12 +101,19 @@ export default function ImportPage() {
         owner = info.owner;
         repo = info.repo;
       }
-      
+
       if (owner && repo) {
-        content = await getSkillContent(owner, repo);
+        try {
+          content = await getSkillContent(owner, repo);
+        } catch {
+          // GitHub fetch failed, use fallback content
+        }
       }
-      
-      const skillContent = convertSkillsMPSkillToSKILL(skill, content || `# ${skill.name}\n\n${skill.description}`);
+
+      const skillContent = convertSkillsMPSkillToSKILL(
+        skill,
+        content || `# ${skill.name}\n\n${skill.description}`
+      );
 
       const response = await fetch('/api/skills/import', {
         method: 'POST',
@@ -116,7 +125,7 @@ export default function ImportPage() {
       });
 
       if (!response.ok) {
-        throw new Error('导入失败');
+        throw new Error('API_ERROR');
       }
 
       alert('导入成功！');
