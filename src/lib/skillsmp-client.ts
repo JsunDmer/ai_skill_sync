@@ -40,6 +40,7 @@ export function getConfig(): SkillsMPConfig | null {
 
 export function setConfig(config: SkillsMPConfig): void {
   if (typeof window !== 'undefined') {
+    console.log('Saving config:', config);
     localStorage.setItem('skillsmp_config', JSON.stringify(config));
   }
 }
