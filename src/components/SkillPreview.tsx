@@ -41,13 +41,6 @@ export function SkillPreview({
             </button>
           </div>
         </div>
-        <div className="p-4 border-b">
-          <div className="flex gap-4 text-sm text-gray-600">
-            {skill.category && (
-              <span className="px-2 py-0.5 bg-gray-100 rounded">类别: {skill.category}</span>
-            )}
-          </div>
-        </div>
         <div className="p-4 overflow-auto max-h-[50vh]">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
