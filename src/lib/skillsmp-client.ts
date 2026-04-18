@@ -66,9 +66,8 @@ export async function searchSkills(params: SearchParams): Promise<SearchResult> 
     {
       headers: {
         'Authorization': `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json',
       },
-      mode: 'cors',
+      credentials: 'omit',
     }
   );
 
