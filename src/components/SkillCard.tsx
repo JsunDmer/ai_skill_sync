@@ -10,17 +10,21 @@ interface SkillCardProps {
 }
 
 export function SkillCard({ skill, onPreview, onImport }: SkillCardProps) {
+  const repoDisplay = skill.repo 
+    ? skill.repo.replace(/^https:\/\/github\.com\//, '').replace(/\/tree\/[^/]+/, '')
+    : skill.author + '/' + skill.name;
+  
   return (
     <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
-        <div>
-          <h3 className="font-medium text-lg">{skill.name}</h3>
-          <p className="text-sm text-gray-600 flex items-center gap-1">
-            <FolderOpen className="w-3 h-3" />
-            {skill.repo}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-lg truncate">{skill.name}</h3>
+          <p className="text-sm text-gray-500 truncate" title={skill.repo}>
+            <FolderOpen className="w-3 h-3 inline" />
+            {repoDisplay}
           </p>
         </div>
-        <div className="flex items-center gap-1 text-sm">
+        <div className="flex items-center gap-1 text-sm whitespace-nowrap ml-2">
           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
           <span>{formatStars(skill.stars)}</span>
         </div>

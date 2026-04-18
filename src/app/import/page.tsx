@@ -54,14 +54,32 @@ export default function ImportPage() {
   const handlePreview = async (skill: SkillsMPSkill) => {
     setSelectedSkill(skill);
     setIsPreviewLoading(true);
-    setPreviewContent('');
+    setPreviewContent('加载中...');
 
     try {
-      const { owner, repo } = extractRepoInfo(skill.repo);
+      let owner = '';
+      let repo = '';
+      
+      if (skill.githubUrl) {
+        const info = extractRepoInfo(skill.githubUrl);
+        owner = info.owner;
+        repo = info.repo;
+      } else if (skill.repo) {
+        const info = extractRepoInfo(skill.repo);
+        owner = info.owner;
+        repo = info.repo;
+      }
+      
+      if (!owner || !repo) {
+        setPreviewContent(`# ${skill.name}\n\n${skill.description}\n\n来源: ${skill.repo || skill.author}`);
+        setIsPreviewLoading(false);
+        return;
+      }
+      
       const content = await getSkillContent(owner, repo);
       setPreviewContent(content);
     } catch {
-      setPreviewContent('无法加载技能内容');
+      setPreviewContent(`# ${skill.name}\n\n${skill.description}\n\n来源: ${skill.repo || skill.author}\n\n(无法加载完整内容)`);
     } finally {
       setIsPreviewLoading(false);
     }
@@ -69,9 +87,25 @@ export default function ImportPage() {
 
   const handleImport = async (skill: SkillsMPSkill) => {
     try {
-      const { owner, repo } = extractRepoInfo(skill.repo);
-      const content = await getSkillContent(owner, repo);
-      const skillContent = convertSkillsMPSkillToSKILL(skill, content);
+      let owner = '';
+      let repo = '';
+      let content = '';
+      
+      if (skill.githubUrl) {
+        const info = extractRepoInfo(skill.githubUrl);
+        owner = info.owner;
+        repo = info.repo;
+      } else if (skill.repo) {
+        const info = extractRepoInfo(skill.repo);
+        owner = info.owner;
+        repo = info.repo;
+      }
+      
+      if (owner && repo) {
+        content = await getSkillContent(owner, repo);
+      }
+      
+      const skillContent = convertSkillsMPSkillToSKILL(skill, content || `# ${skill.name}\n\n${skill.description}`);
 
       const response = await fetch('/api/skills/import', {
         method: 'POST',
