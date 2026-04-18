@@ -25,8 +25,8 @@ export function SkillPreview({
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
         <div className="flex items-start justify-between p-4 border-b">
           <div>
-            <h2 className="text-xl font-medium">{skill.name}</h2>
-            <p className="text-sm text-gray-600 flex items-center gap-1">
+            <h2 className="text-xl font-medium text-gray-900">{skill.name}</h2>
+            <p className="text-sm text-gray-500 flex items-center gap-1">
               <FolderOpen className="w-3 h-3" />
               {skill.repo}
             </p>
@@ -40,10 +40,6 @@ export function SkillPreview({
             <span className="flex items-center gap-1">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
               {skill.stars}
-            </span>
-            <span className="flex items-center gap-1">
-              <FolderOpen className="w-4 h-4" />
-              {skill.repo}
             </span>
             {skill.category && (
               <span className="px-2 py-0.5 bg-gray-100 rounded">类别: {skill.category}</span>
