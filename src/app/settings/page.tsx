@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navigation } from '@/components/navigation';
 import { Platform } from '@/types/skill';
+import { getConfig, setConfig } from '@/lib/skillsmp-client';
+import { Check } from 'lucide-react';
 
 const PLATFORMS: Platform[] = ['opencode', 'claude', 'trace-cn', 'cursor'];
 
@@ -19,6 +21,21 @@ export default function SettingsPage() {
   const [token, setToken] = useState(config.git.token);
   const [branch, setBranch] = useState(config.git.branch);
   const [selectedPlatforms, setSelectedPlatformsState] = useState<Platform[]>(config.selectedPlatforms);
+  const [skillsmpApiKey, setSkillsmpApiKey] = useState('');
+  const [savedSkillsmp, setSavedSkillsmp] = useState(false);
+
+  useEffect(() => {
+    const skillsmpConfig = getConfig();
+    if (skillsmpConfig?.apiKey) {
+      setSkillsmpApiKey(skillsmpConfig.apiKey);
+    }
+  }, []);
+
+  const handleSaveSkillsMP = () => {
+    setConfig({ apiKey: skillsmpApiKey });
+    setSavedSkillsmp(true);
+    setTimeout(() => setSavedSkillsmp(false), 2000);
+  };
 
   const handleSave = async () => {
     setLoading(true);
@@ -86,6 +103,42 @@ export default function SettingsPage() {
                   placeholder="main"
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>SkillsMP API</CardTitle>
+              <CardDescription>
+                Configure SkillsMP API Key for external skill import
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="skillsmpApiKey">API Key</Label>
+                <Input
+                  id="skillsmpApiKey"
+                  type="password"
+                  value={skillsmpApiKey}
+                  onChange={e => setSkillsmpApiKey(e.target.value)}
+                  placeholder="sk_live_xxx"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Get API key from{' '}
+                  <a
+                    href="https://skillsmp.com/settings/api"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline"
+                  >
+                    SkillsMP Settings
+                  </a>
+                </p>
+              </div>
+              <Button onClick={handleSaveSkillsMP}>
+                {savedSkillsmp && <Check className="w-4 h-4 mr-2" />}
+                {savedSkillsmp ? 'Saved' : 'Save SkillsMP Key'}
+              </Button>
             </CardContent>
           </Card>
 
