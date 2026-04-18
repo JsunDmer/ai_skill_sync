@@ -136,6 +136,10 @@ export async function getSkillContent(owner: string, repo: string): Promise<stri
   const cleanOwner = owner.replace(/\.git$/, '');
   const cleanRepo = repo.replace(/\.git$/, '').replace(/^tree\/[^/]+\//, '');
   
+  if (!cleanOwner || !cleanRepo) {
+    throw new Error('SKILL_NOT_FOUND');
+  }
+  
   const response = await fetch(
     `https://raw.githubusercontent.com/${cleanOwner}/${cleanRepo}/main/SKILL.md`
   );
@@ -158,7 +162,7 @@ export function extractRepoInfo(repoString: string): { owner: string; repo: stri
     return { owner: '', repo: '' };
   }
   
-  const match = repoString.match(/github\.com[/:]([^/]+)/([^/]+)/?/);
+  const match = repoString.match(/github\.com[/:]([^/]+)[/]([^/]+)/);
   if (match) {
     return { owner: match[1], repo: match[2] };
   }
