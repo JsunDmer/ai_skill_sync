@@ -56,7 +56,7 @@ export function SkillPreview({
               <span className="text-gray-500">加载中...</span>
             </div>
           ) : (
-            <pre className="whitespace-pre-wrap text-sm font-mono bg-gray-50 p-4 rounded overflow-x-auto">
+            <pre className="whitespace-pre-wrap text-sm font-mono bg-slate-100 text-slate-900 p-4 rounded overflow-x-auto">
               {content}
             </pre>
           )}
