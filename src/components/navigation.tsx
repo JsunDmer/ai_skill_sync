@@ -73,6 +73,9 @@ export function Navigation() {
           <Link href="/skills/new">
             <Button variant="ghost">Import</Button>
           </Link>
+          <Link href="/import">
+            <Button variant="ghost">External</Button>
+          </Link>
           <Link href="/settings">
             <Button variant="ghost">Settings</Button>
           </Link>
