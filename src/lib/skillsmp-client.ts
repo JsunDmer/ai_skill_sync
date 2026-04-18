@@ -7,8 +7,23 @@ export interface SkillsMPSkill {
   stars: number;
   updatedAt: string;
   githubUrl?: string;
+  skillUrl?: string;
   category?: string;
   occupation?: string;
+}
+
+export function normalizeSkill(data: Record<string, unknown>): SkillsMPSkill {
+  return {
+    id: String(data.id || ''),
+    name: String(data.name || ''),
+    author: String(data.author || ''),
+    repo: String(data.githubUrl || data.skillUrl || ''),
+    description: String(data.description || ''),
+    stars: Number(data.stars || 0),
+    updatedAt: String(data.updatedAt || ''),
+    githubUrl: data.githubUrl as string | undefined,
+    skillUrl: data.skillUrl as string | undefined,
+  };
 }
 
 export interface SearchParams {
@@ -81,8 +96,9 @@ export async function searchSkills(params: SearchParams): Promise<SearchResult> 
   }
 
   const data = await response.json();
+  const skills = (data.data || []).map((s: Record<string, unknown>) => normalizeSkill(s));
   return {
-    skills: data.data || [],
+    skills,
     total: data.total || 0,
   };
 }

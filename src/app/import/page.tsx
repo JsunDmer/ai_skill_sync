@@ -41,7 +41,9 @@ export default function ImportPage() {
     try {
       const result = await searchSkills({ query, sortBy: 'stars' });
       console.log('Search result:', result);
+      console.log('Skills count:', result.skills?.length);
       setSkills(result.skills || []);
+      console.log('setSkills done, skills:', skills);
     } catch (e) {
       setError(e instanceof Error ? e.message : '搜索失败');
     } finally {
