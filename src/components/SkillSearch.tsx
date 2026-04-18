@@ -27,7 +27,7 @@ export function SkillSearch({ onSearch, isLoading }: SkillSearchProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="搜索技能..."
-            className="w-full px-4 py-2 pl-10 border rounded-lg"
+            className="w-full px-4 py-2 pl-10 border rounded-lg text-gray-900 placeholder:text-gray-400"
             disabled={isLoading}
           />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
